@@ -1,0 +1,101 @@
+{
+  "1": {
+    "Van Cortlandt Park-242 St": "Uptown & The Bronx",
+    "South Ferry": "Downtown & South Ferry"
+  },
+  "2": {
+    "Wakefield-241 St": "Uptown & The Bronx",
+    "Flatbush Av-Brooklyn College": "Downtown & Brooklyn"
+  },
+  "3": {
+    "Harlem-148 St": "Uptown & The Bronx",
+    "New Lots Av": "Downtown & Brooklyn"
+  },
+  "4": {
+    "Woodlawn": "Uptown & The Bronx",
+    "Crown Hts-Utica Av": "Downtown & Brooklyn",
+    "Utica Av": "Downtown & Brooklyn"
+  },
+  "5": {
+    "Eastchester-Dyre Av": "Uptown & The Bronx",
+    "Flatbush Av-Brooklyn College": "Downtown & Brooklyn"
+  },
+  "6": {
+    "Pelham Bay Park": "Uptown & The Bronx",
+    "Brooklyn Bridge-City Hall": "Downtown"
+  },
+  "7": {
+    "Flushing-Main St": "Queens",
+    "Hudson Yards": "Manhattan"
+  },
+  "A": {
+    "Inwood-207 St": "Uptown & The Bronx",
+    "Far Rockaway-Mott Av": "Downtown & Brooklyn",
+    "Ozone Park-Lefferts Blvd": "Downtown & Brooklyn",
+    "Rockaway Park-Beach 116 St": "Downtown & Brooklyn"
+  },
+  "B": {
+    "145 St": "Uptown",
+    "Brighton Beach": "Downtown & Brooklyn"
+  },
+  "C": {
+    "168 St-Washington Hts": "Uptown & The Bronx",
+    "Euclid Av": "Downtown & Brooklyn"
+  },
+  "D": {
+    "Norwood-205 St": "Uptown & The Bronx",
+    "Coney Island-Stillwell Av": "Downtown & Brooklyn"
+  },
+  "E": {
+    "Jamaica Center-Parsons/Archer": "Queens",
+    "World Trade Center": "Downtown & Manhattan"
+  },
+  "F": {
+    "Jamaica-179 St": "Queens",
+    "Coney Island-Stillwell Av": "Downtown & Brooklyn"
+  },
+  "G": {
+    "Court Sq": "Queens",
+    "Church Av": "Brooklyn"
+  },
+  "J": {
+    "Jamaica Center-Parsons/Archer": "Queens",
+    "Broad St": "Manhattan"
+  },
+  "L": {
+    "8 Av": "Manhattan",
+    "Canarsie-Rockaway Pkwy": "Brooklyn"
+  },
+  "M": {
+    "Forest Hills-71 Av": "Queens",
+    "Middle Village-Metropolitan Av": "Brooklyn"
+  },
+  "N": {
+    "Astoria-Ditmars Blvd": "Queens",
+    "Coney Island-Stillwell Av": "Downtown & Brooklyn"
+  },
+  "Q": {
+    "96 St": "Manhattan",
+    "Coney Island-Stillwell Av": "Downtown & Brooklyn"
+  },
+  "R": {
+    "Forest Hills-71 Av": "Queens",
+    "Bay Ridge-95 St": "Downtown & Brooklyn"
+  },
+  "S": {
+    "Times Sq-42 St": "Times Sq",
+    "Grand Central-42 St": "Grand Central"
+  },
+  "SIR": {
+    "St George": "St George",
+    "Tottenville": "Tottenville"
+  },
+  "W": {
+    "Astoria-Ditmars Blvd": "Queens",
+    "Whitehall St-South Ferry": "Downtown"
+  },
+  "Z": {
+    "Jamaica Center-Parsons/Archer": "Queens",
+    "Broad St": "Manhattan"
+  }
+}

@@ -11,7 +11,9 @@ import SwiftUI
 struct xTransit_Watch_AppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                ContentView()
+            }
         }
     }
 }
