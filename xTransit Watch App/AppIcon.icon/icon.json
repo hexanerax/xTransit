@@ -1,0 +1,63 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "extended-gray:0.25000,1.00000",
+      "extended-gray:0.00000,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000",
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "hidden" : false,
+          "image-name" : "train.svg",
+          "name" : "train",
+          "position" : {
+            "scale" : 2.95,
+            "translation-in-points" : [
+              -135.1171875,
+              71.15000000000009
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
