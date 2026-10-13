@@ -32,7 +32,7 @@ A standalone Apple Watch app for getting around NYC by subway and bus. Search fo
    | --- | --- |
    | `GoogleMapsAPIKey` | Directions and routing |
    | `MTABusTimeAPIKey` | Live bus arrivals |
-   | `MTASubwayAPIKey` | Optional, sent as `x-api-key` if set |
+   | `MTASubwayAPIKey` | Optional, sent as `x-api-key` if set; leave the placeholder or blank to skip |
 
    `Config.plist` is gitignored, so your keys stay out of version control.
 
@@ -55,3 +55,11 @@ xTransit Watch App/
 ## Platform direction labels
 
 `PlatformDirections.json` is hand-curated. The `build_platform_directions.py` script in the parent project folder prints what the current MTA GTFS feed reports, so you can audit the file. It does not overwrite it.
+
+## Disclaimer
+
+xTransit is an independent project. It is not affiliated with, endorsed by, or sponsored by the Metropolitan Transportation Authority (MTA) or Google. Transit data comes from MTA's public real-time feeds and the Google Directions API, and is subject to their respective terms of use. Arrival times and routes may be inaccurate or delayed, so don't rely on them for anything safety-critical.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>GoogleMapsAPIKey</key>
-	<string></string>
+	<string>PASTE_YOUR_KEYS_HERE</string>
 	<key>MTABusTimeAPIKey</key>
-	<string></string>
+	<string>PASTE_YOUR_KEYS_HERE</string>
 	<key>MTASubwayAPIKey</key>
-	<string></string>
+	<string>PASTE_YOUR_KEYS_HERE</string>
 </dict>
 </plist>

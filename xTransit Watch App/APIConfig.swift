@@ -20,8 +20,12 @@ struct APIConfig {
             mtaSubwayAPIKey = ""
             return
         }
-        googleMapsAPIKey = dict["GoogleMapsAPIKey"] ?? ""
-        mtaBusTimeAPIKey = dict["MTABusTimeAPIKey"] ?? ""
-        mtaSubwayAPIKey = dict["MTASubwayAPIKey"] ?? ""
+        func value(_ key: String) -> String {
+            let v = dict[key] ?? ""
+            return v == "PASTE_YOUR_KEYS_HERE" ? "" : v
+        }
+        googleMapsAPIKey = value("GoogleMapsAPIKey")
+        mtaBusTimeAPIKey = value("MTABusTimeAPIKey")
+        mtaSubwayAPIKey = value("MTASubwayAPIKey")
     }
 }
