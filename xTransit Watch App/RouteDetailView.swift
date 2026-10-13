@@ -12,22 +12,42 @@ import Combine
 
 struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     @State var steps: [RouteStep]
     let destination: String
-    
-    let radius: CGFloat = 80
+
+    /// Layout was tuned against the Apple Watch Ultra's screen, which is
+    /// 410x502 in *pixels* but only 205x251 in *points* (2x scale) — the
+    /// units SwiftUI/GeometryReader actually reports. Every size-related
+    /// constant below scales relative to that point-width baseline, using
+    /// the GeometryReader's measured size (not a device lookup, which
+    /// proved unreliable) so the view fits smaller and larger watch faces
+    /// proportionally.
+    private static let referenceWidth: CGFloat = 205
+
+    /// Mirrors the GeometryReader-derived scale so it's available outside
+    /// the reader's closure (e.g. when pushing FullMapView).
+    @State private var layoutScale: CGFloat = 1.0
+
+    func scale(for geo: GeometryProxy) -> CGFloat {
+        geo.size.width / Self.referenceWidth
+    }
+
+    private let baseRadius: CGFloat = 80
     let startAngle: Double = 135
     let totalSweep: Double = 270
-    let strokeWidth: CGFloat = 30
+    private let baseStrokeWidth: CGFloat = 30
     let minGapDegrees: Double = 27
-    let yOffset: CGFloat = 15
+    private let baseYOffset: CGFloat = 15
     let labelAngleOffset: Double = 2
-    
-    let dotSize: CGFloat = 6
-    let dotSpacing: CGFloat = 10
+
+    private let baseDotSize: CGFloat = 6
+    private let baseDotSpacing: CGFloat = 10
     let dotColor: Color = Color(hex: "2C7CF6")
-    
+
+    var dotSize: CGFloat { baseDotSize * layoutScale }
+    var dotSpacing: CGFloat { baseDotSpacing * layoutScale }
+
     @State var activeStepIndex: Int = 0
     @State private var mapPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var walkPolylineCoords: [CLLocationCoordinate2D] = []
@@ -131,18 +151,19 @@ struct RouteDetailView: View {
         return result
     }
     
-    func center(_ geo: GeometryProxy) -> CGPoint {
-        CGPoint(x: geo.size.width / 2, y: geo.size.height / 2 + yOffset)
+    func center(_ geo: GeometryProxy, scale s: CGFloat) -> CGPoint {
+        CGPoint(x: geo.size.width / 2, y: geo.size.height / 2 + baseYOffset * s)
     }
-    
-    func point(_ geo: GeometryProxy, angle: Double, r: CGFloat) -> CGPoint {
+
+    func point(_ geo: GeometryProxy, angle: Double, r: CGFloat, scale s: CGFloat) -> CGPoint {
         let rad = angle * .pi / 180
+        let c = center(geo, scale: s)
         return CGPoint(
-            x: center(geo).x + r * cos(rad),
-            y: center(geo).y + r * sin(rad)
+            x: c.x + r * cos(rad),
+            y: c.y + r * sin(rad)
         )
     }
-    
+
     func badgeCircleColor(for step: RouteStep) -> Color {
         switch step.badge {
         case .walk: return Color(hex: "666666")
@@ -152,13 +173,11 @@ struct RouteDetailView: View {
         case .ferry(let color): return Color(hex: color)
         }
     }
-    
-    var mapDiameter: CGFloat {
-        (radius - strokeWidth / 2 - 4) * 2
+
+    func mapDiameter(radius: CGFloat, strokeWidth: CGFloat, scale s: CGFloat) -> CGFloat {
+        (radius - strokeWidth / 2 - 4 * s) * 2
     }
-    
-    var centerDiameter: CGFloat { mapDiameter }
-    
+
     // MARK: - Real-time ETAs
 
     @MainActor func refreshETAs() async {
@@ -277,10 +296,16 @@ struct RouteDetailView: View {
     
     var body: some View {
         GeometryReader { geo in
-            let c = center(geo)
+            let s = scale(for: geo)
+            let radius = baseRadius * s
+            let strokeWidth = baseStrokeWidth * s
+            let mapDiam = mapDiameter(radius: radius, strokeWidth: strokeWidth, scale: s)
+            let c = center(geo, scale: s)
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+                    .onAppear { layoutScale = s }
+                    .onChange(of: s) { _, newValue in layoutScale = newValue }
+
                 // MARK: - Walk Map
                 if isWalkActive {
                     Map(position: $mapPosition) {
@@ -302,7 +327,7 @@ struct RouteDetailView: View {
                     }
                     .mapStyle(.standard(pointsOfInterest: .excludingAll))
                     //.allowsHitTesting(false)
-                    .frame(width: mapDiameter, height: mapDiameter)
+                    .frame(width: mapDiam, height: mapDiam)
                     .clipShape(Circle())
                     .position(c)
                     .onAppear {
@@ -325,37 +350,37 @@ struct RouteDetailView: View {
                     ZStack {
                         Circle()
                             .fill(Color.clear)
-                            .frame(width: centerDiameter, height: centerDiameter)
+                            .frame(width: mapDiam, height: mapDiam)
                         
                         if showStopDetail {
                             VStack(spacing: 0) {
-                                HStack(alignment: .bottom, spacing: 2) {
+                                HStack(alignment: .bottom, spacing: 2 * s) {
                                     Text("\(step.trainStops)")
-                                        .font(.system(size: 40, weight: .semibold, design: .rounded))
+                                        .font(.system(size: 40 * s, weight: .semibold, design: .rounded))
                                         .foregroundStyle(.white)
                                     Text("STOPS")
-                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .font(.system(size: 15 * s, weight: .medium, design: .rounded))
                                         .foregroundStyle(Color(hex: "FFFFFF"))
-                                        .padding(.bottom, 5)
+                                        .padding(.bottom, 5 * s)
                                 }
                                 Text(step.trainExitStop)
-                                    .font(.system(size: 13, weight: .medium))
+                                    .font(.system(size: 13 * s, weight: .medium))
                                     .foregroundStyle(.white)
                                     .multilineTextAlignment(.center)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.horizontal, 4)
+                                    .padding(.horizontal, 4 * s)
                             }
-                            .padding(42)
+                            .padding(42 * s)
                         } else {
                             // Direction view
-                            VStack(spacing: 4) {
+                            VStack(spacing: 4 * s) {
                                 Text(step.platformDirection)
-                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 20 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(3)
                             }
-                            .padding(42)
+                            .padding(42 * s)
                         }
                     }
                     .position(c)
@@ -371,24 +396,24 @@ struct RouteDetailView: View {
                     ZStack {
                         Circle()
                             .fill(Color.clear)
-                            .frame(width: centerDiameter, height: centerDiameter)
+                            .frame(width: mapDiam, height: mapDiam)
                         
                         VStack(spacing: 0) {
-                            HStack(alignment: .bottom, spacing: 2) {
+                            HStack(alignment: .bottom, spacing: 2 * s) {
                                 Text("\(step.busStops)")
-                                    .font(.system(size: 40, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 40 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                                 Text("STOPS")
-                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .font(.system(size: 15 * s, weight: .medium, design: .rounded))
                                     .foregroundStyle(.white)
-                                    .padding(.bottom, 5)
+                                    .padding(.bottom, 5 * s)
                             }
                             Text(step.busLine)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 13 * s, weight: .medium))
                                 .foregroundStyle(.white)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(42)
+                        .padding(42 * s)
                     }
                     .position(c)
                 }
@@ -398,36 +423,36 @@ struct RouteDetailView: View {
                     ZStack {
                         Circle()
                             .fill(Color.clear)
-                            .frame(width: centerDiameter, height: centerDiameter)
-                        VStack(spacing: 8) {
-                            HStack(spacing: 10) {
+                            .frame(width: mapDiam, height: mapDiam)
+                        VStack(spacing: 8 * s) {
+                            HStack(spacing: 10 * s) {
                                 ZStack {
                                     Circle()
                                         .fill(Color(hex: LineColors.badge(for: step.transferFromLine)))
                                     Text(step.transferFromLine)
-                                        .font(.system(size: 17, weight: .bold))
+                                        .font(.system(size: 17 * s, weight: .bold))
                                         .foregroundStyle(LineColors.textColor(for: step.transferFromLine) ? .black : .white)
-                                        .offset(y: -1)
+                                        .offset(y: -1 * s)
                                 }
-                                .frame(width: 36, height: 36)
+                                .frame(width: 36 * s, height: 36 * s)
                                 Image(systemName: "arrow.right")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 14 * s, weight: .semibold))
                                     .foregroundStyle(Color(hex: "666666"))
                                 ZStack {
                                     Circle()
                                         .fill(Color(hex: LineColors.badge(for: step.transferToLine)))
                                     Text(step.transferToLine)
-                                        .font(.system(size: 17, weight: .bold))
+                                        .font(.system(size: 17 * s, weight: .bold))
                                         .foregroundStyle(LineColors.textColor(for: step.transferToLine) ? .black : .white)
-                                        .offset(y: -1)
+                                        .offset(y: -1 * s)
                                 }
-                                .frame(width: 36, height: 36)
+                                .frame(width: 36 * s, height: 36 * s)
                             }
                             Text("Transfer")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(size: 14 * s, weight: .semibold, design: .rounded))
                                 .foregroundStyle(Color(hex: "666666"))
                         }
-                        .padding(42)
+                        .padding(42 * s)
                     }
                     .position(c)
                 }
@@ -444,7 +469,7 @@ struct RouteDetailView: View {
                     }
                     .stroke(
                         isActive ? Color(hex: step.border) : Color.black,
-                        style: StrokeStyle(lineWidth: strokeWidth + 4, lineCap: .round)
+                        style: StrokeStyle(lineWidth: strokeWidth + 4 * s, lineCap: .round)
                     )
                     
                     Path { path in
@@ -456,20 +481,20 @@ struct RouteDetailView: View {
                     )
                     
                     Text(step.label)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15 * s, weight: .medium))
                         .foregroundStyle(Color(hex: "CCCCCC"))
-                        .position(point(geo, angle: angles.start + labelAngleOffset, r: radius))
+                        .position(point(geo, angle: angles.start + labelAngleOffset, r: radius, scale: s))
                         .opacity(showLabel ? 1 : 0)
-                    
+
                     ZStack {
                         Circle().fill(badgeCircleColor(for: step))
                         if case .transfer = step.badge, isActive {
-                            Circle().stroke(Color(hex: step.border), lineWidth: 2)
+                            Circle().stroke(Color(hex: step.border), lineWidth: 2 * s)
                         }
-                        badgeIcon(for: step.badge)
+                        badgeIcon(for: step.badge, scale: s)
                     }
-                    .frame(width: 24, height: 24)
-                    .position(point(geo, angle: angles.start + angles.sweep, r: radius))
+                    .frame(width: 24 * s, height: 24 * s)
+                    .position(point(geo, angle: angles.start + angles.sweep, r: radius, scale: s))
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             activeStepIndex = index
@@ -482,23 +507,23 @@ struct RouteDetailView: View {
                 if isWalkActive {
                     VStack {
                         Spacer()
-                        HStack(spacing: -70) {
-                            HStack(spacing: 2) {
+                        HStack(spacing: -70 * s) {
+                            HStack(spacing: 2 * s) {
                                 Image(systemName: "point.topleft.down.to.point.bottomright.filled.curvepath")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13 * s))
                                     .foregroundStyle(Color(hex: "666666"))
                                 Text(distanceToNext)
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .medium, design: .rounded))
                                     .foregroundStyle(.white)
                             }
                             .frame(maxWidth: .infinity)
-                            
-                            HStack(spacing: 2) {
+
+                            HStack(spacing: 2 * s) {
                                 Image(systemName: "figure.walk")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13 * s))
                                     .foregroundStyle(Color(hex: "666666"))
                                 Text(timeToNext)
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                             }
                             .frame(maxWidth: .infinity)
@@ -514,20 +539,20 @@ struct RouteDetailView: View {
                         Spacer()
                         VStack(spacing: 0) {
                             Text(step.fare)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                 .foregroundStyle(Color(hex: "FFFFFF"))
-                            HStack(spacing: 2) {
+                            HStack(spacing: 2 * s) {
                                 Image(systemName: "dot.radiowaves.up.forward")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13 * s))
                                     .foregroundStyle(.green)
                                 Text("IN")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color(hex: "888888"))
                                 Text(step.departureNumbers)
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .bold, design: .rounded))
                                     .foregroundStyle(.white)
                                 Text("MIN")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color(hex: "888888"))
                             }
                         }
@@ -542,20 +567,20 @@ struct RouteDetailView: View {
                         Spacer()
                         VStack(spacing: 0) {
                             Text(step.busStop)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
-                            HStack(spacing: 2) {
+                            HStack(spacing: 2 * s) {
                                 Image(systemName: "dot.radiowaves.up.forward")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13 * s))
                                     .foregroundStyle(.green)
                                 Text("IN")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color(hex: "888888"))
                                 Text(step.busNumbers)
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .bold, design: .rounded))
                                     .foregroundStyle(.white)
                                 Text("MIN")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13 * s, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color(hex: "888888"))
                             }
                         }
@@ -583,28 +608,28 @@ struct RouteDetailView: View {
     }
     
     @ViewBuilder
-    func badgeIcon(for badge: RouteStep.Badge) -> some View {
+    func badgeIcon(for badge: RouteStep.Badge, scale s: CGFloat) -> some View {
         switch badge {
         case .walk:
             Image(systemName: "figure.walk")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11 * s, weight: .medium))
                 .foregroundStyle(.white)
         case .transfer:
             Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 10 * s, weight: .medium))
                 .foregroundStyle(.white)
         case .train(let line, _):
             Text(line)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 13 * s, weight: .semibold))
                 .foregroundStyle(LineColors.textColor(for: line) ? .black : .white)
-                .offset(y: -1)
+                .offset(y: -1 * s)
         case .bus:
             Image(systemName: "bus.fill")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 10 * s, weight: .medium))
                 .foregroundStyle(.white)
         case .ferry:
             Image(systemName: "ferry.fill")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 10 * s, weight: .medium))
                 .foregroundStyle(.white)
         }
     }
